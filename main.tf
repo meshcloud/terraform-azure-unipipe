@@ -48,7 +48,7 @@ resource "azurerm_resource_group" "unipipe" {
   location = var.location
 }
 
-# setup a storage account with a file share, will be later used by caddi to store ACME challenge files
+# setup a storage account with a file share, will be later used by caddy to store ACME challenge files
 resource "azurerm_storage_account" "unipipe" {
   name                      = local.unipipe_storage_account_name_postfix
   resource_group_name       = azurerm_resource_group.unipipe.name
@@ -96,11 +96,14 @@ resource "azurerm_container_group" "unipipe_with_ssl" {
       protocol = "TCP"
     }
 
-    secure_environment_variables = {
+    environment_variables = {
       "GIT_REMOTE"              = var.unipipe_git_remote
       "GIT_REMOTE_BRANCH"       = var.unipipe_git_branch
-      "GIT_SSH_KEY"             = tls_private_key.unipipe_git_ssh_key.private_key_pem
       "APP_BASIC_AUTH_USERNAME" = var.unipipe_basic_auth_username
+    }
+
+    secure_environment_variables = {
+      "GIT_SSH_KEY"             = tls_private_key.unipipe_git_ssh_key.private_key_pem
       "APP_BASIC_AUTH_PASSWORD" = random_password.unipipe_basic_auth_password.result
     }
   }

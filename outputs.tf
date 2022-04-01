@@ -4,7 +4,8 @@ output "url" {
 }
 
 output "unipipe_basic_auth_username" {
-  value = var.unipipe_basic_auth_username
+  value       = var.unipipe_basic_auth_username
+  description = "OSB API basic auth username"
 }
 
 output "unipipe_basic_auth_password" {
@@ -19,5 +20,5 @@ output "unipipe_git_ssh_key" {
 }
 
 output "info" {
-  value = "UniPipe OSB is starting now. This may take a couple of minutes on Azure ACI. You can use Azure Portal to view logs of the container starting up and debug any issues. Also note that for newly deployed domains Azure ACI can take a few minutes to provide DNS."
+  value = "UniPipe is starting now. This may take a couple of minutes on Azure ACI. You can use Azure Portal to view logs of the container starting up and debug any issues. Also note that for newly deployed domains Azure ACI can take a few minutes to provide DNS."
 }
