@@ -29,11 +29,6 @@ provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
 }
-provider "tls" {
-}
-
-provider "random" {
-}
 
 # setup key pair for accesing the git repository
 # this setup will store the private key in your terrraform state and is thus not recommended for production use cases
