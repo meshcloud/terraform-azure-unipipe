@@ -31,7 +31,7 @@ resource "github_repository" "instance_repository" {
 
 # UniPipe container on Azure
 module "unipipe" {
-  source = "git::https://github.com/meshcloud/terraform-azure-unipipe.git@b824997f0b71ba6829832039f9e6b0309253553a"
+  source = "git::https://github.com/meshcloud/terraform-azure-unipipe.git/?ref=b824997f0b71ba6829832039f9e6b0309253553a"
 
   subscription_id    = "..." # The subscription the container lives in.
   unipipe_git_remote = github_repository.instance_repository.ssh_clone_url
