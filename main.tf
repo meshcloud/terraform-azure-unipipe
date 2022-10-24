@@ -22,6 +22,7 @@ locals {
   #postfix for preventing already-in-use errors
   resource_group_name_postfix          = "${var.resource_group_name}-${random_string.postfix.result}"
   dns_postfix                          = "${var.dns_name_label}-${random_string.postfix.result}"
+  dns_terraform_runner_postfix         = "${var.dns_name_label}-terraform-runner-${random_string.postfix.result}"
   unipipe_storage_account_name_postfix = "unipipeosb${random_string.postfix.result}"
 }
 
@@ -71,7 +72,7 @@ resource "random_string" "postfix" {
   upper   = false
 }
 
-# setup container group
+# setup container group: unipipe-service-broker
 resource "azurerm_container_group" "unipipe_with_ssl" {
   resource_group_name = azurerm_resource_group.unipipe.name
   location            = var.location
@@ -129,5 +130,36 @@ resource "azurerm_container_group" "unipipe_with_ssl" {
 
     # instead of a caddyfile, we use CLI options
     commands = ["caddy", "reverse-proxy", "--from", "${local.dns_postfix}.${var.location_tag}.azurecontainer.io", "--to", "localhost:8075"]
+  }
+}
+
+
+# setup container group: unipipe-terraform-runner
+resource "azurerm_container_group" "unipipe_terraform_runner" {
+  count = var.deploy_terraform_runner ? 1 : 0
+
+  resource_group_name = azurerm_resource_group.unipipe.name
+  location            = var.location
+  name                = "unipipe-terraform-runner"
+  os_type             = "Linux"
+  dns_name_label      = local.dns_terraform_runner_postfix
+  ip_address_type     = "private"
+
+  container {
+    name   = "app"
+    image  = "ghcr.io/meshcloud/unipipe-terraform-runner:${var.unipipe_version}"
+    cpu    = "0.5"
+    memory = "0.5"
+
+    environment_variables = {
+      "GIT_USER_EMAIL" = "unipipe-terraform-runner@meshcloud.io"
+      "GIT_USER_NAME"  = "Terraform Runner"
+      "GIT_REMOTE"     = var.unipipe_git_remote
+      "GIT_REPO"       = var.unipipe_git_remote # Remove when the container can work with GIT_REMOTE
+    }
+
+    secure_environment_variables = {
+      "GIT_SSH_KEY" = tls_private_key.unipipe_git_ssh_key.private_key_pem
+    }
   }
 }

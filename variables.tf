@@ -10,6 +10,11 @@ variable "unipipe_git_remote" {
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
+variable "deploy_terraform_runner" {
+  type = bool
+  default = false
+  description = "Set this to true if you want to use UniPipe terraform runner"
+}
 variable "resource_group_name" {
   type        = string
   default     = "rg-unipipe-demo"
