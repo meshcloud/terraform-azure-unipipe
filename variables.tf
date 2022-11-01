@@ -7,6 +7,20 @@ variable "unipipe_git_remote" {
   description = "git repo URL, use a deploy key (GitHub) or similar to setup an automation user SSH key for unipipe"
 }
 # ---------------------------------------------------------------------------------------------------------------------
+# TERRAFORM RUNNER PARAMETERS
+# Set these variables if you want to deploy terraform runner
+# ---------------------------------------------------------------------------------------------------------------------
+variable "deploy_terraform_runner" {
+  type        = bool
+  default     = false
+  description = "Set this to true if you want to use UniPipe terraform runner"
+}
+variable "terraform_runner_environment_variables" {
+  type        = map(string)
+  default     = {}
+  description = "Set additional environment variables for terraform-runner container. To authenticate Azure, pass ARM_TENANT_ID, ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_SECRET_ID."
+}
+# ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
