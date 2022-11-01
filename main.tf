@@ -4,15 +4,15 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 2.0"
+      version = ">=3.29.1"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "3.1.0"
+      version = ">=4.0.4"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.1.0"
+      version = ">=3.4.3"
     }
   }
 }
@@ -57,11 +57,12 @@ resource "azurerm_storage_account" "unipipe" {
 resource "azurerm_storage_share" "acishare" {
   name                 = "acishare"
   storage_account_name = azurerm_storage_account.unipipe.name
+  quota                = 1
 }
 
 # setup a random password for the OSB instance
 resource "random_password" "unipipe_basic_auth_password" {
-  length  = 16
+  length  = 32
   special = false
 }
 
@@ -79,7 +80,7 @@ resource "azurerm_container_group" "unipipe_with_ssl" {
   name                = "unipipe-with-ssl"
   os_type             = "Linux"
   dns_name_label      = local.dns_postfix
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
 
   container {
     name   = "app"
@@ -143,7 +144,7 @@ resource "azurerm_container_group" "unipipe_terraform_runner" {
   name                = "unipipe-terraform-runner"
   os_type             = "Linux"
   dns_name_label      = local.dns_terraform_runner_postfix
-  ip_address_type     = "private"
+  ip_address_type     = "Private"
 
   container {
     name   = "app"
