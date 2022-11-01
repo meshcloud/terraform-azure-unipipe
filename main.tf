@@ -155,7 +155,6 @@ resource "azurerm_container_group" "unipipe_terraform_runner" {
       "GIT_USER_EMAIL" = "unipipe-terraform-runner@meshcloud.io"
       "GIT_USER_NAME"  = "Terraform Runner"
       "GIT_REMOTE"     = var.unipipe_git_remote
-      "GIT_REPO"       = var.unipipe_git_remote # Remove when the container can work with GIT_REMOTE
     }
 
     secure_environment_variables = {
