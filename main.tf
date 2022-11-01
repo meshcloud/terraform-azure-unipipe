@@ -22,7 +22,6 @@ locals {
   #postfix for preventing already-in-use errors
   resource_group_name_postfix          = "${var.resource_group_name}-${random_string.postfix.result}"
   dns_postfix                          = "${var.dns_name_label}-${random_string.postfix.result}"
-  dns_terraform_runner_postfix         = "${var.dns_name_label}-terraform-runner-${random_string.postfix.result}"
   unipipe_storage_account_name_postfix = "unipipeosb${random_string.postfix.result}"
 }
 
@@ -77,10 +76,20 @@ resource "random_string" "postfix" {
 resource "azurerm_container_group" "unipipe_with_ssl" {
   resource_group_name = azurerm_resource_group.unipipe.name
   location            = var.location
-  name                = "unipipe-with-ssl"
+  name                = "unipipe-service-broker"
   os_type             = "Linux"
   dns_name_label      = local.dns_postfix
   ip_address_type     = "Public"
+
+  exposed_port {
+    port     = 443
+    protocol = "TCP"
+  }
+
+  exposed_port {
+    port     = 80
+    protocol = "TCP"
+  }
 
   container {
     name   = "app"
@@ -143,8 +152,7 @@ resource "azurerm_container_group" "unipipe_terraform_runner" {
   location            = var.location
   name                = "unipipe-terraform-runner"
   os_type             = "Linux"
-  dns_name_label      = local.dns_terraform_runner_postfix
-  ip_address_type     = "Private"
+  ip_address_type     = "None"
 
   container {
     name   = "app"
