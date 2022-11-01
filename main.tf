@@ -158,8 +158,8 @@ resource "azurerm_container_group" "unipipe_terraform_runner" {
       "GIT_REMOTE"     = var.unipipe_git_remote
     }
 
-    secure_environment_variables = {
+    secure_environment_variables = merge({
       "GIT_SSH_KEY" = tls_private_key.unipipe_git_ssh_key.private_key_pem
-    }
+    }, var.terraform_runner_environment_variables)
   }
 }
