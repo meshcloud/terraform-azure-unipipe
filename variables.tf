@@ -1,7 +1,3 @@
-variable "subscription_id" {
-  type        = string
-  description = "The Azure Subscription where you want to deploy unipipe"
-}
 variable "unipipe_git_remote" {
   type        = string
   description = "git repo URL, use a deploy key (GitHub) or similar to setup an automation user SSH key for unipipe"
