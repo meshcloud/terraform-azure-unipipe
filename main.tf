@@ -17,12 +17,10 @@ terraform {
   }
 }
 
-
 locals {
   #postfix for preventing already-in-use errors
-  resource_group_name_postfix          = "${var.resource_group_name}-${random_string.postfix.result}"
   dns_postfix                          = "${var.dns_name_label}-${random_string.postfix.result}"
-  unipipe_storage_account_name_postfix = "unipipeosb${random_string.postfix.result}"
+  unipipe_storage_account_name_postfix = "unipipeservicebroker${random_string.postfix.result}"
 }
 
 provider "azurerm" {
@@ -37,17 +35,16 @@ resource "tls_private_key" "unipipe_git_ssh_key" {
   ecdsa_curve = "P384"
 }
 
-# first we need a resource group
-resource "azurerm_resource_group" "unipipe" {
-  name     = local.resource_group_name_postfix
-  location = var.location
+
+data "azurerm_resource_group" "unipipe" {
+  name = var.resource_group_name
 }
 
 # setup a storage account with a file share, will be later used by caddy to store ACME challenge files
 resource "azurerm_storage_account" "unipipe" {
   name                      = local.unipipe_storage_account_name_postfix
-  resource_group_name       = azurerm_resource_group.unipipe.name
-  location                  = azurerm_resource_group.unipipe.location
+  resource_group_name       = data.azurerm_resource_group.unipipe.name
+  location                  = data.azurerm_resource_group.unipipe.location
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = true
@@ -74,7 +71,7 @@ resource "random_string" "postfix" {
 
 # setup container group: unipipe-service-broker
 resource "azurerm_container_group" "unipipe_with_ssl" {
-  resource_group_name = azurerm_resource_group.unipipe.name
+  resource_group_name = data.azurerm_resource_group.unipipe.name
   location            = var.location
   name                = "unipipe-service-broker"
   os_type             = "Linux"
@@ -148,7 +145,7 @@ resource "azurerm_container_group" "unipipe_with_ssl" {
 resource "azurerm_container_group" "unipipe_terraform_runner" {
   count = var.deploy_terraform_runner ? 1 : 0
 
-  resource_group_name = azurerm_resource_group.unipipe.name
+  resource_group_name = data.azurerm_resource_group.unipipe.name
   location            = var.location
   name                = "unipipe-terraform-runner"
   os_type             = "Linux"
