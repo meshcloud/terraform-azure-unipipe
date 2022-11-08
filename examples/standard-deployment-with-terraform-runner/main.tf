@@ -4,45 +4,109 @@ terraform {
   #
   # Remove/comment the backend block below if you are only testing the module.
   # Please be aware that you cannot destroy the created resources via terraform if you lose the state file.
-  backend "gcs" {
-    bucket = "..."
-    prefix = "unipipe-demo"
+  backend "azurerm" {
+    resource_group_name  = "..."
+    storage_account_name = "..."
+    container_name       = "..."
+    key                  = "terraform.tfstate"
   }
 
   required_providers {
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~>2.30.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.29.1"
+    }
     github = {
       source  = "integrations/github"
-      version = "4.22.0"
+      version = "~>5.7.0"
     }
+
   }
 }
 
+locals {
+  # The GitHub organization the instance repostiory lives in.
+  github_owner = "..."
+
+  # Id of the Azure AD tenant that you want to offer your service in.
+  tenant_id = "..."
+
+  # Id of the Azure Subscription that should host the service broker container and state.
+  subscription_id = "..."
+}
+
 provider "github" {
-  owner = "..." # The GitHub organization the instance repostiory lives in.
+  owner = local.github_owner
 }
 
-# GitHub repository
-resource "github_repository" "instance_repository" {
-  name = "unipipe-demo"
-
-  visibility  = "private"
-  description = "This is the git instance repository used by UniPipe Service Broker."
+provider "azuread" {
+  tenant_id = local.tenant_id
 }
 
-# UniPipe container on Azure
+provider "azurerm" {
+  tenant_id       = local.tenant_id
+  subscription_id = local.subscription_id
+  features {}
+}
+
+data "github_repository" "instance_repository" {
+  name = "unipipe-pizza"
+}
+
+#
+# Service Principal for managing service instances
+#
+resource "azuread_application" "unipipe_pizza" {
+  display_name = "unipipe-pizza"
+}
+
+resource "azuread_service_principal" "unipipe_pizza" {
+  application_id = azuread_application.unipipe_pizza.application_id
+}
+
+resource "azuread_service_principal_password" "unipipe_pizza" {
+  service_principal_id = azuread_service_principal.unipipe_pizza.object_id
+}
+
+#
+# UniPipe service broker + terraform runner on Azure
+#
+resource "azurerm_resource_group" "unipipe_pizza" {
+  name     = "unipipe-pizza"
+  location = "West Europe"
+}
+
 module "unipipe" {
-  source = "git::https://github.com/meshcloud/terraform-azure-unipipe.git/?ref=b824997f0b71ba6829832039f9e6b0309253553a"
+  source = "git::https://github.com/meshcloud/terraform-azure-unipipe.git/?ref=v0.2"
 
-  subscription_id         = "..." # The subscription the container lives in.
-  unipipe_git_remote      = github_repository.instance_repository.ssh_clone_url
-  unipipe_git_branch      = "main"
+  resource_group_name = azurerm_resource_group.unipipe_pizza.name
+
+  unipipe_git_remote          = data.github_repository.instance_repository.ssh_clone_url
+  unipipe_git_branch          = "main"
+  unipipe_basic_auth_username = "marketplace"
+
   deploy_terraform_runner = true
+  terraform_runner_environment_variables = {
+    "TF_VAR_platform_secret" = azuread_service_principal_password.unipipe_pizza.value
+    "ARM_TENANT_ID"          = local.tenant_id
+    "ARM_SUBSCRIPTION_ID"    = local.subscription_id
+    "ARM_CLIENT_ID"          = azuread_application.unipipe_pizza.application_id
+    "ARM_CLIENT_SECRET"      = azuread_service_principal_password.unipipe_pizza.value
+  }
+
+  depends_on = [
+    azurerm_resource_group.unipipe_pizza
+  ]
 }
 
-# Grant the container access to the GitHub repository.
-resource "github_repository_deploy_key" "unipipe-ssh-key" {
+# Grant the containers access to the GitHub repository.
+resource "github_repository_deploy_key" "unipipe_ssh_key" {
   title      = "unipipe-service-broker-deploy-key"
-  repository = github_repository.instance_repository.name
+  repository = data.github_repository.instance_repository.name
   key        = module.unipipe.unipipe_git_ssh_key
   read_only  = "false"
 }
