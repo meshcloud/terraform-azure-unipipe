@@ -35,6 +35,13 @@ cloneUrl --register clone URL--> instanceRepoURL
 
 ## How to use this example
 
+Copy the files.
+
+```sh
+curl https://raw.githubusercontent.com/meshcloud/terraform-azure-unipipe/main/examples/standard-deployment-with-terraform-runner/main.tf > main.tf
+curl https://raw.githubusercontent.com/meshcloud/terraform-azure-unipipe/main/examples/standard-deployment-with-terraform-runner/outputs.tf > outputs.tf
+```
+
 Replace all occurrences of "..." with proper values.
 
-Run `terraform apply`.
+Run `terraform init` and then `terraform apply`.
