@@ -110,3 +110,21 @@ resource "github_repository_deploy_key" "unipipe_ssh_key" {
   key        = module.unipipe.unipipe_git_ssh_key
   read_only  = "false"
 }
+
+output "env_sh" {
+  value = "Tipp: Source the file env.sh in this directory for local testing with `unipipe terraform`."
+}
+
+# local file for testing
+resource "local_file" "env_sh" {
+  content  = <<EOT
+#!/bin/bash
+# This file stores sensitive information. Never commit this file to version control!
+export TF_VAR_platform_secret="${azuread_service_principal_password.unipipe_pizza.value}"
+export ARM_TENANT_ID="${local.tenant_id}"
+export ARM_SUBSCRIPTION_ID="${local.subscription_id}"
+export ARM_CLIENT_ID="${azuread_application.unipipe_pizza.application_id}"
+export ARM_CLIENT_SECRET="${azuread_service_principal_password.unipipe_pizza.value}"
+EOT
+  filename = "env.sh"
+}
