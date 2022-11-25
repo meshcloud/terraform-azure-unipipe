@@ -11,6 +11,10 @@ output "url" {
   value = module.unipipe.url
 }
 
+output "unipipe_git_ssh_key" {
+  value = module.unipipe.unipipe_git_ssh_key
+}
+
 output "how-to-continue" {
   value = <<EOT
 1. Run `unipipe generate terraform-runner-hello-world` in the repository root. This will generate a minimal service definition and terraform files for working with service instances.
