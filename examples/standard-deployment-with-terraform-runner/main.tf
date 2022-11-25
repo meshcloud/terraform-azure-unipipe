@@ -5,6 +5,7 @@ terraform {
   # Remove/comment the backend block below if you are only testing the module.
   # Please be aware that you cannot destroy the created resources via terraform if you lose the state file.
   backend "azurerm" {
+    subscription_id      = "..."
     resource_group_name  = "..."
     storage_account_name = "..."
     container_name       = "..."
