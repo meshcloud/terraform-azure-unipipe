@@ -1,4 +1,4 @@
-# Standard deployment with unipipe terraform runner
+# Standard deployment with terraform runner
 
 This example spins up UniPipe service broker and terraform runner.
 
