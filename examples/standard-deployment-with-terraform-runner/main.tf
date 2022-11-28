@@ -112,6 +112,9 @@ resource "github_repository_deploy_key" "unipipe_ssh_key" {
   read_only  = "false"
 }
 
+#
+# Helper files for local development
+#
 output "env_sh" {
   value = "Tipp: Source the file env.sh in this directory for local testing with `unipipe terraform`."
 }
@@ -128,4 +131,21 @@ export ARM_CLIENT_ID="${azuread_application.unipipe_pizza.application_id}"
 export ARM_CLIENT_SECRET="${azuread_service_principal_password.unipipe_pizza.value}"
 EOT
   filename = "env.sh"
+}
+
+output "env_ps1" {
+  value = "Tipp: Dot source the file env.ps1 in this directory for local testing with `unipipe terraform` in powershell."
+}
+
+# local file for testing
+resource "local_file" "env_ps1" {
+  content  = <<EOT
+# This file stores sensitive information. Never commit this file to version control!
+$Env:TF_VAR_platform_secret="${azuread_service_principal_password.unipipe_pizza.value}"
+$Env:ARM_TENANT_ID="${local.tenant_id}"
+$Env:ARM_SUBSCRIPTION_ID="${local.subscription_id}"
+$Env:ARM_CLIENT_ID="${azuread_application.unipipe_pizza.application_id}"
+$Env:ARM_CLIENT_SECRET="${azuread_service_principal_password.unipipe_pizza.value}"
+EOT
+  filename = "env.ps1"
 }
