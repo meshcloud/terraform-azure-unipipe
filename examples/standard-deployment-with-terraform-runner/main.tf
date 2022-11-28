@@ -21,27 +21,19 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>3.29.1"
     }
-    github = {
-      source  = "integrations/github"
-      version = "~>5.7.0"
-    }
-
   }
 }
 
 locals {
-  # The GitHub organization the instance repostiory lives in.
-  github_owner = "..."
-
   # Id of the Azure AD tenant that you want to offer your service in.
   tenant_id = "..."
 
   # Id of the Azure Subscription that should host the service broker container and state.
   subscription_id = "..."
-}
 
-provider "github" {
-  owner = local.github_owner
+  # SSH clone URL of the git repository that you want to use for managing instances
+  # Example: git@github.com:likvid-bank/networking-services.git
+  unipipe_git_remote = "..."
 }
 
 provider "azuread" {
@@ -52,10 +44,6 @@ provider "azurerm" {
   tenant_id       = local.tenant_id
   subscription_id = local.subscription_id
   features {}
-}
-
-data "github_repository" "instance_repository" {
-  name = "unipipe-pizza"
 }
 
 #
@@ -86,7 +74,7 @@ module "unipipe" {
 
   resource_group_name = azurerm_resource_group.unipipe_pizza.name
 
-  unipipe_git_remote          = data.github_repository.instance_repository.ssh_clone_url
+  unipipe_git_remote          = local.unipipe_git_remote
   unipipe_git_branch          = "main"
   unipipe_basic_auth_username = "marketplace"
 
@@ -104,22 +92,12 @@ module "unipipe" {
   ]
 }
 
-# Grant the containers access to the GitHub repository.
-resource "github_repository_deploy_key" "unipipe_ssh_key" {
-  title      = "unipipe-service-broker-deploy-key"
-  repository = data.github_repository.instance_repository.name
-  key        = module.unipipe.unipipe_git_ssh_key
-  read_only  = "false"
-}
-
 #
 # Helper files for local development
 #
 output "env_sh" {
-  value = "Tipp: Source the file env.sh in this directory for local testing with `unipipe terraform`."
+  value = "Tipp: Source the file env.sh before executing `unipipe terraform` by running `source env.sh`."
 }
-
-# local file for testing
 resource "local_file" "env_sh" {
   content  = <<EOT
 #!/bin/bash
@@ -134,10 +112,8 @@ EOT
 }
 
 output "env_ps1" {
-  value = "Tipp: Dot source the file env.ps1 in this directory for local testing with `unipipe terraform` in powershell."
+  value = "Tipp: Dot source the file env.ps1 before executing `unipipe terraform` in powershell by running `. env.ps1`."
 }
-
-# local file for testing
 resource "local_file" "env_ps1" {
   content  = <<EOT
 # This file stores sensitive information. Never commit this file to version control!
@@ -148,4 +124,13 @@ $Env:ARM_CLIENT_ID="${azuread_application.unipipe_pizza.application_id}"
 $Env:ARM_CLIENT_SECRET="${azuread_service_principal_password.unipipe_pizza.value}"
 EOT
   filename = "env.ps1"
+}
+
+resource "local_file" "gitignore" {
+  content  = <<EOT
+# Do not commit local helper files that may contain secrets.
+env.ps1
+env.sh
+EOT
+  filename = ".gitignore"
 }
