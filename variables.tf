@@ -17,6 +17,20 @@ variable "terraform_runner_environment_variables" {
   description = "Set additional environment variables for terraform-runner container. To authenticate Azure, pass ARM_TENANT_ID, ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_SECRET_ID."
 }
 # ---------------------------------------------------------------------------------------------------------------------
+# CHANGE FOR PRODUCTION PARAMETERS
+# These parameters should be changed before going to production.
+# ---------------------------------------------------------------------------------------------------------------------
+variable "private_key_pem" {
+  type        = string
+  default     = null
+  description = "A PEM formatted SSH private key with access to the unipipe repository. If this variable is null, the module will create a private key and store it in the terraform state. Therefore it is recommended to set this variable for production use-cases."
+}
+variable "unipipe_basic_auth_password" {
+  type        = string
+  default     = null
+  description = "The password used for authenticating against the service broker. If this variable is null, the module will create a password and store it in the terraform state. Therefore it is recommended to set this variable for production use-cases."
+}
+# ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------

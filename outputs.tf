@@ -1,5 +1,5 @@
 output "url" {
-  value       = "https://${azurerm_container_group.unipipe_with_ssl.fqdn}"
+  value       = "https://${azurerm_container_group.unipipe_service_broker.fqdn}"
   description = "UniPipe API URL. If you want access to the catalog page, you can add /v2/catalog at the end of the url."
 }
 
@@ -9,13 +9,13 @@ output "unipipe_basic_auth_username" {
 }
 
 output "unipipe_basic_auth_password" {
-  value       = random_password.unipipe_basic_auth_password.result
+  value       = local.unipipe_basic_auth_password
   sensitive   = true
   description = "OSB API basic auth password"
 }
 
 output "unipipe_git_ssh_key" {
-  value       = tls_private_key.unipipe_git_ssh_key.public_key_openssh
+  value       = data.tls_public_key.unipipe_git_ssh_key
   description = "UniPipe will use this key to access the git repository. You have to give read+write access on the target repository for this key."
 }
 
